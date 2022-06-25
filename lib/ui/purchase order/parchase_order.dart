@@ -23,28 +23,29 @@ class PurchaseOrder extends StatefulWidget {
 }
 
 class _PurchaseOrderState extends State<PurchaseOrder> {
-
   final boolState = StateProvider<bool>((ref) {
     return false;
   });
 
   bool isLoading = false;
   late HttpService httpService;
-  late PendingListDto pendingListDto= new PendingListDto();
+  late PendingListDto pendingListDto = new PendingListDto();
   late PendingListModel pendingListModel;
   late ApprovalModel approvalModel;
 
+  bool _dataVisibility = true;
+
   UnitList? unitList;
   UnitListDto? unitListDto;
-  List<UnitList>unitlistfinal= [];
+  List<UnitList> unitlistfinal = [];
 
   var selectedValue;
 
-  late String unit_cd= "";
+  late String unit_cd = "";
 
-  List<PendingListModel> items= [];
+  List<PendingListModel> items = [];
 
-  TextEditingController remarks= TextEditingController();
+  TextEditingController remarks = TextEditingController();
 
   void configLoading() {
     EasyLoading.instance
@@ -62,11 +63,13 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
     // ..customAnimation = CustomAnimation();
   }
 
-  Future getCategoryListDetails(int amd_no,String doc_type, String emp_cd, String unit_cd ) async{
+  Future getCategoryListDetails(
+      int amd_no, String doc_type, String emp_cd, String unit_cd) async {
     EasyLoading.show();
     Response response;
     try {
-      response = await httpService.getCategoryListDetails(amd_no, doc_type, emp_cd, unit_cd);
+      response = await httpService.getCategoryListDetails(
+          amd_no, doc_type, emp_cd, unit_cd);
       EasyLoading.dismiss();
       if (response.statusCode == 200) {
         pendingListDto = PendingListDto.fromJson(response.data);
@@ -75,6 +78,10 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
           setState(() {
             items.clear();
             items.addAll(pendingListDto.getAllCategory);
+            if (pendingListDto.getAllCategory[0].remarks == "null" &&
+                pendingListDto.getAllCategory[0].pay_terms == "null") {
+              _dataVisibility = false;
+            }
             //itemCount = pendingListDto.getAllCategory.length;
           });
           print(response);
@@ -85,24 +92,28 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
           );
         }
       }
-    }
-      on SocketException {
-        return Future.error('No Internet connection 😑');
-      }
-      on FormatException {
-        return Future.error('Bad response format 👎');
-      }
-      on Exception catch (e) {
-        EasyLoading.dismiss();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("GET CATEGORY LIST CALL FAILED")));
+    } on SocketException {
+      return Future.error('No Internet connection 😑');
+    } on FormatException {
+      return Future.error('Bad response format 👎');
+    } on Exception catch (e) {
+      EasyLoading.dismiss();
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("GET CATEGORY LIST CALL FAILED")));
     }
   }
 
   //Approve and revert
-  Future getApproveandRevert(int amdNO, String appDt, String appStage,
-      String area, String comp_code, String doc_type, String poNo, String remark, String unit_code
-      ) async {
+  Future getApproveandRevert(
+      int amdNO,
+      String appDt,
+      String appStage,
+      String area,
+      String comp_code,
+      String doc_type,
+      String poNo,
+      String remark,
+      String unit_code) async {
     EasyLoading.show();
     Response response;
     try {
@@ -112,7 +123,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
       if (response.statusCode == 200) {
         approvalModel = ApprovalModel.fromJson(response.data);
         print(response);
-        getCategoryListDetails( Helper.getamd_no(), Helper.getdoc_type(),
+        getCategoryListDetails(Helper.getamd_no(), Helper.getdoc_type(),
             Helper.getemp_cd(), Helper.getunit_cd());
       } else {
         return Future.error(
@@ -126,22 +137,24 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
       return Future.error('Bad response format 👎');
     } on Exception catch (e) {
       EasyLoading.dismiss();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("APPROVE/ REVERT CALL FAILED")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("APPROVE/ REVERT CALL FAILED")));
     }
   }
 
   //SearchList
 
-  void filterSearchResults(String query){
+  void filterSearchResults(String query) {
     List<PendingListModel> dummySearchList = <PendingListModel>[];
     dummySearchList.addAll(pendingListDto.getAllCategory);
-    if(query.isNotEmpty){
-      List<PendingListModel> dummyListData= <PendingListModel>[];
+    if (query.isNotEmpty) {
+      List<PendingListModel> dummyListData = <PendingListModel>[];
       dummySearchList.forEach((items) {
-        if(items.po_no.toString().toLowerCase().contains(query.toLowerCase()) ||
-            items.name.toString().toLowerCase().contains(query.toLowerCase())
-        ){
+        if (items.po_no
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()) ||
+            items.name.toString().toLowerCase().contains(query.toLowerCase())) {
           //ummySearchList.add(item);
           dummyListData.add(items);
         }
@@ -149,17 +162,15 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
       setState(() {
         items.clear();
         items.addAll(dummyListData);
-      }
-      );
+      });
       return;
-    }else{
+    } else {
       setState(() {
         items.clear();
         items.addAll(pendingListDto.getAllCategory);
       });
     }
   }
-
 
   //Unit List
   Future getUnitList(String userId) async {
@@ -169,9 +180,9 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
       response = await httpService.getUnitList(userId);
       EasyLoading.dismiss();
       if (response.statusCode == 200) {
-        unitListDto= UnitListDto.fromJson(response.data);
+        unitListDto = UnitListDto.fromJson(response.data);
         setState(() {
-          unitlistfinal= unitListDto!.getUniList ;
+          unitlistfinal = unitListDto!.getUniList;
         });
       } else {
         return Future.error(
@@ -194,8 +205,8 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
   void initState() {
     httpService = HttpService();
     getUnitList(Helper.getuserName());
-   getCategoryListDetails( Helper.getamd_no(), Helper.getdoc_type(),
-       Helper.getemp_cd(), Helper.getunit_cd());
+    getCategoryListDetails(Helper.getamd_no(), Helper.getdoc_type(),
+        Helper.getemp_cd(), Helper.getunit_cd());
     EasyLoading();
     super.initState();
   }
@@ -203,15 +214,15 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
   final String formatted = DateFormat('dd-MMM-yy').format(DateTime.now());
 
   Future openDialog() => showDialog(
-
       context: context,
       builder: (context) => Dialog(
           elevation: 8.0,
           shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
           child: SingleChildScrollView(
             child: Stack(
-              clipBehavior: Clip.none, alignment: Alignment.topCenter,
+              clipBehavior: Clip.none,
+              alignment: Alignment.topCenter,
               children: [
                 SizedBox(
                   height: 200,
@@ -221,22 +232,20 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                         height: 40,
                       ),
                       Container(
-                        width: 200,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black),
-                          borderRadius: BorderRadius.circular(8)
-                        ),
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child:TextField(
-                          maxLines: null,
-                          controller: remarks,
-                          keyboardType: TextInputType.multiline,
-                          decoration: const InputDecoration.collapsed(
-                            hintText: "  Enter Your Remark Here",
-                          ),
-                        )
-                      ),
+                          width: 200,
+                          height: 100,
+                          decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black),
+                              borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: TextField(
+                            maxLines: null,
+                            controller: remarks,
+                            keyboardType: TextInputType.multiline,
+                            decoration: const InputDecoration.collapsed(
+                              hintText: "  Enter Your Remark Here",
+                            ),
+                          )),
                       const SizedBox(
                         height: 10,
                       ),
@@ -256,9 +265,11 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                 remarks.text.toString(),
                                 Helper.getunit_cd(),
                               );
-                              Navigator.popUntil(context, (Route<dynamic>route){
-                                bool shouldPop= false;
-                                if(route.settings.name== MyRoutes.PurchaseOrder){
+                              Navigator.popUntil(context,
+                                  (Route<dynamic> route) {
+                                bool shouldPop = false;
+                                if (route.settings.name ==
+                                    MyRoutes.PurchaseOrder) {
                                   shouldPop = true;
                                 }
                                 return shouldPop;
@@ -290,9 +301,11 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                 remarks.text.toString(),
                                 Helper.getunit_cd(),
                               );
-                              Navigator.popUntil(context, (Route<dynamic>route){
-                                bool shouldPop= false;
-                                if(route.settings.name== MyRoutes.PurchaseOrder){
+                              Navigator.popUntil(context,
+                                  (Route<dynamic> route) {
+                                bool shouldPop = false;
+                                if (route.settings.name ==
+                                    MyRoutes.PurchaseOrder) {
                                   shouldPop = true;
                                 }
                                 return shouldPop;
@@ -320,7 +333,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                     child: CircleAvatar(
                       backgroundColor: Colors.black,
                       child: Image.asset(
-                       "assets/terms_white_logo.png",
+                        "assets/terms_white_logo.png",
                         scale: 8,
                       ),
                       radius: 40,
@@ -329,83 +342,100 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
             ),
           )));
 
-
   @override
   Widget build(BuildContext context) {
     final String formatted = DateFormat('dd-MMM-yy').format(DateTime.now());
     print(formatted);
+
     return Scaffold(
         appBar: AppBar(
-          title:
-              Image.asset(
-                "assets/terms_white_logo.png",
-                scale: 8,
-              ),
+          title: Image.asset(
+            "assets/terms_white_logo.png",
+            alignment: Alignment.center,
+            scale: 8,
+          ),
           automaticallyImplyLeading: false,
-          leading:  IconButton(
-              onPressed: (){Navigator.pushNamed(context, MyRoutes.MyNavigation);},
-              icon: Icon(Icons.arrow_back_ios)),
+          leading: IconButton(
+              onPressed: () {
+                Navigator.pushNamed(context, MyRoutes.MyNavigation);
+              },
+              icon: const Icon(Icons.arrow_back_ios)),
         ),
         body: WillPopScope(
-          onWillPop:()async{
+          onWillPop: () async {
             Navigator.pushNamed(context, MyRoutes.MyNavigation);
             return true;
-            },
+          },
           child: SafeArea(
               child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                   padding: const EdgeInsets.all(8),
-                  child: Text(Helper.getdoc_name(),
-                    style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 18),)),
+                  child: Text(
+                    Helper.getdoc_name(),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 18),
+                  )),
               SizedBox(
                 child: Container(
                     height: 70,
                     padding: const EdgeInsets.all(8),
-                   // padding: const EdgeInsets.only(left: 40, right: 40, bottom: 10),
-                    child:DropdownButtonFormField(
+                    // padding: const EdgeInsets.only(left: 40, right: 40, bottom: 10),
+                    child: DropdownButtonFormField(
                         alignment: Alignment.center,
                         elevation: 8,
-                        onTap: (){},
-                        validator:(selectedValue) => selectedValue== null? 'Please select your UNITCODE': null,
+                        onTap: () {},
+                        validator: (selectedValue) => selectedValue == null
+                            ? 'Please select your UNITCODE'
+                            : null,
                         value: selectedValue,
                         decoration: InputDecoration(
                             fillColor: Colors.white,
                             focusColor: Colors.black,
                             filled: true,
-                            contentPadding:  const EdgeInsets.all(10),
+                            contentPadding: const EdgeInsets.all(10),
                             border: OutlineInputBorder(
                               borderSide: const BorderSide(color: Colors.black),
                               borderRadius: BorderRadius.circular(10.0),
                             ),
                             enabledBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(color: Colors.black,style: BorderStyle.solid,width: 2),
+                                borderSide: const BorderSide(
+                                    color: Colors.black,
+                                    style: BorderStyle.solid,
+                                    width: 2),
                                 borderRadius: BorderRadius.circular(10.0)),
-                            labelStyle: const TextStyle(color: Colors.purple, fontSize: 20.0)
+                            labelStyle: const TextStyle(
+                                color: Colors.purple, fontSize: 20.0)),
+                        hint: Text(
+                          Helper.getunitName(),
+                          style: const TextStyle(color: Colors.grey),
                         ),
-                        hint: Text(Helper.getunitName(),style: TextStyle(color: Colors.grey),),
                         isExpanded: true,
-                        items: unitlistfinal.map((value) => DropdownMenuItem(
-                          value: value,
-                          child: Text(value.name.toString()),
-                        )).toList(),
+                        items: unitlistfinal
+                            .map((value) => DropdownMenuItem(
+                                  value: value,
+                                  child: Text(value.name.toString()),
+                                ))
+                            .toList(),
                         onChanged: (value) {
                           setState(() {
                             selectedValue = value;
-                            int? position = unitListDto?.getUniList
-                                .indexOf(selectedValue);
+                            int? position =
+                                unitListDto?.getUniList.indexOf(selectedValue);
                             unit_cd = unitListDto?.getUniList
-                                .elementAt(position!)
-                                .unitcode ??
+                                    .elementAt(position!)
+                                    .unitcode ??
                                 "";
-                            Helper.setunit_cd(unit_cd);//getUnitList(Helper.getuserName());
+                            Helper.setunit_cd(
+                                unit_cd); //getUnitList(Helper.getuserName());
                           });
-                          getCategoryListDetails( Helper.getamd_no(), Helper.getdoc_type(),
-                              Helper.getemp_cd(), Helper.getunit_cd());
-                        }
-                    )
-                ),
+                          getCategoryListDetails(
+                              Helper.getamd_no(),
+                              Helper.getdoc_type(),
+                              Helper.getemp_cd(),
+                              Helper.getunit_cd());
+                        })),
               ),
               Container(
                 height: 70,
@@ -414,15 +444,18 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: "Search..",
-                      enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.black,style: BorderStyle.solid,width: 2),
-                          borderRadius: BorderRadius.circular(10.0)),
-                    focusedBorder:  OutlineInputBorder(
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Colors.black,
+                            style: BorderStyle.solid,
+                            width: 2),
+                        borderRadius: BorderRadius.circular(10.0)),
+                    focusedBorder: OutlineInputBorder(
                       borderSide: const BorderSide(color: Colors.black),
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                   ),
-                  onChanged: (value){
+                  onChanged: (value) {
                     filterSearchResults(value);
                     print('value:' + value);
                   },
@@ -431,7 +464,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
               Expanded(
                 child: ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount:items.length ,
+                    itemCount: items.length,
                     shrinkWrap: true,
                     itemBuilder: (BuildContext context, index) {
                       return Padding(
@@ -445,16 +478,18 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        primary: Colors.yellow,
-                                        minimumSize: const Size(80, 45),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
-                                      ),
+                                          primary: Colors.yellow,
+                                          minimumSize: const Size(80, 45),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10))),
                                       child: Row(
                                         children: [
                                           const Text(
@@ -464,43 +499,86 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                                 fontWeight: FontWeight.w600,
                                                 color: Colors.black),
                                           ),
-                                          Image.asset("assets/images/right-arrow-2.png",scale: 20,)
+                                          Image.asset(
+                                            "assets/images/right-arrow-2.png",
+                                            scale: 20,
+                                          )
                                         ],
                                       ),
                                       onPressed: () {
-                                        Helper.setamd_no(pendingListDto.getAllCategory.elementAt(index).amd_no!);
-                                        Helper.setdoc_number(pendingListDto.getAllCategory.elementAt(index).po_no ??"");
-                                        Helper.setdoc_name(pendingListDto.getAllCategory.elementAt(index).doc_name ??"");
-                                        Helper.setappDt(pendingListDto.getAllCategory.elementAt(index).po_dt ??"");
-                                        Helper.setappStage(pendingListDto.getAllCategory.elementAt(index).po_status ??"");
-                                        Navigator.pushNamed(context, MyRoutes.ViewTabUI);
+                                        Helper.setamd_no(pendingListDto
+                                            .getAllCategory
+                                            .elementAt(index)
+                                            .amd_no!);
+                                        Helper.setdoc_number(pendingListDto
+                                                .getAllCategory
+                                                .elementAt(index)
+                                                .po_no ??
+                                            "");
+                                        Helper.setdoc_name(pendingListDto
+                                                .getAllCategory
+                                                .elementAt(index)
+                                                .doc_name ??
+                                            "");
+                                        Helper.setappDt(pendingListDto
+                                                .getAllCategory
+                                                .elementAt(index)
+                                                .po_dt ??
+                                            "");
+                                        Helper.setappStage(pendingListDto
+                                                .getAllCategory
+                                                .elementAt(index)
+                                                .po_status ??
+                                            "");
+                                        Navigator.pushNamed(
+                                            context, MyRoutes.ViewTabUI);
                                       },
                                     ),
                                   ),
-
-                                  Padding(padding: const EdgeInsets.all(8),
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        primary: const Color(0xffB09EFF),
-                                        minimumSize: const Size(80, 45),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          primary: const Color(0xffB09EFF),
+                                          minimumSize: const Size(80, 45),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10))),
+                                      child: const Text(
+                                        "Approve/ Revert",
+                                        style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white),
+                                      ),
+                                      onPressed: () {
+                                        Helper.setamd_no(pendingListDto
+                                            .getAllCategory
+                                            .elementAt(index)
+                                            .amd_no!);
+                                        Helper.setdoc_number(pendingListDto
+                                                .getAllCategory
+                                                .elementAt(index)
+                                                .po_no ??
+                                            "");
+                                        Helper.setdoc_name(pendingListDto
+                                                .getAllCategory
+                                                .elementAt(index)
+                                                .doc_name ??
+                                            "");
+                                        Helper.setappDt(pendingListDto
+                                                .getAllCategory
+                                                .elementAt(index)
+                                                .po_dt ??
+                                            "");
+                                        Helper.setappStage(pendingListDto
+                                                .getAllCategory
+                                                .elementAt(index)
+                                                .po_status ??
+                                            "");
+                                        openDialog();
+                                      },
                                     ),
-                                    child: const Text(
-                                      "Approve/ Revert",
-                                      style: TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white),
-                                    ),
-                                    onPressed: () {
-                                      Helper.setamd_no(pendingListDto.getAllCategory.elementAt(index).amd_no!);
-                                      Helper.setdoc_number(pendingListDto.getAllCategory.elementAt(index).po_no ??"");
-                                      Helper.setdoc_name(pendingListDto.getAllCategory.elementAt(index).doc_name ??"");
-                                      Helper.setappDt(pendingListDto.getAllCategory.elementAt(index).po_dt ??"");
-                                      Helper.setappStage(pendingListDto.getAllCategory.elementAt(index).po_status ??"");
-                                     openDialog();
-                                    },
-                                  ),
                                   ),
                                 ],
                               ),
@@ -525,7 +603,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                     padding: const EdgeInsets.only(
                                         right: 10, top: 8, bottom: 0),
                                     child: Text(
-                                      items.elementAt(index).po_dt ??"",
+                                      items.elementAt(index).po_dt ?? "",
                                       textAlign: TextAlign.start,
                                       style: const TextStyle(fontSize: 15),
                                     ),
@@ -549,7 +627,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                     padding: const EdgeInsets.only(
                                         right: 10, top: 8, bottom: 0),
                                     child: Text(
-                                      items.elementAt(index).doc_name ??"",
+                                      items.elementAt(index).doc_name ?? "",
                                       textAlign: TextAlign.start,
                                       style: const TextStyle(fontSize: 15),
                                     ),
@@ -573,7 +651,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                     padding: const EdgeInsets.only(
                                         right: 10, top: 8, bottom: 0),
                                     child: Text(
-                                      items.elementAt(index).po_no ??"",
+                                      items.elementAt(index).po_no ?? "",
                                       textAlign: TextAlign.start,
                                       style: const TextStyle(fontSize: 15),
                                     ),
@@ -597,7 +675,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                     padding: const EdgeInsets.only(
                                         right: 10, top: 8, bottom: 0),
                                     child: Text(
-                                      items.elementAt(index).po_status ??"",
+                                      items.elementAt(index).po_status ?? "",
                                       textAlign: TextAlign.start,
                                       style: const TextStyle(fontSize: 15),
                                     ),
@@ -608,8 +686,7 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                 // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                   Container(
-
+                                  Container(
                                     padding: const EdgeInsets.only(
                                         left: 20, top: 8, bottom: 0),
                                     child: const Text(
@@ -625,8 +702,8 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                     width: 140,
                                     padding: const EdgeInsets.only(
                                         right: 10, top: 8, bottom: 30),
-                                    child:  Text(
-                                      items.elementAt(index).name ??"",
+                                    child: Text(
+                                      items.elementAt(index).name ?? "",
                                       maxLines: 12,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(fontSize: 15),
@@ -634,44 +711,83 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                   )
                                 ],
                               ),
-                              // Row(
-                              //   //mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              //   crossAxisAlignment: CrossAxisAlignment.start,
-                              //   children: [
-                              //     const Padding(
-                              //       padding: EdgeInsets.only(
-                              //           left: 20, top: 10, bottom: 10, right: 10),
-                              //       child: Text(
-                              //         "Remarks                 :",
-                              //         style: TextStyle(
-                              //             fontSize: 16,
-                              //             fontWeight: FontWeight.bold),
-                              //       ),
-                              //     ),
-                              //     Container(
-                              //       width: 180,
-                              //       padding: const EdgeInsets.only(
-                              //           left: 20, top: 10, bottom: 10),
-                              //       child: const Text(
-                              //         "PO Variable Rate Variation 143129, INR @ 1 = 43129 Rs./- Material:- Hydraulic Vane Pump For Power Pack Yukeen, Maximum  Rate :- 36550 & Qty:- 1",
-                              //         maxLines: 10,
-                              //         overflow: TextOverflow.ellipsis,
-                              //         style: TextStyle(fontSize: 15),
-                              //       ),
-                              //     )
-                              //   ],
-                              // ),
+                              Visibility(
+                                visible: _dataVisibility,
+                                child: Row(
+                                  //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(
+                                          left: 20,
+                                          top: 10,
+                                          bottom: 10,
+                                          right: 10),
+                                      child: Text(
+                                        "Remarks                 :",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    Container(
+                                      width: 180,
+                                      padding: const EdgeInsets.only(
+                                          left: 20, top: 10, bottom: 10),
+                                      child: Text(
+                                        items.elementAt(index).remarks ?? "",
+                                        maxLines: 10,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 15),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              Visibility(
+                                visible: _dataVisibility,
+                                child: Row(
+                                  //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(
+                                          left: 20,
+                                          top: 10,
+                                          bottom: 10,
+                                          right: 10),
+                                      child: Text(
+                                        "Pay Terms                 :",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    Container(
+                                      width: 180,
+                                      padding: const EdgeInsets.only(
+                                          left: 20, top: 10, bottom: 10),
+                                      child: Text(
+                                        items.elementAt(index).pay_terms ?? "",
+                                        maxLines: 10,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 15),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
                               Container(
                                 padding: const EdgeInsets.all(15),
-                                decoration:
-                                BoxDecoration(
-                                    color:    Colors.red.shade800,
+                                decoration: BoxDecoration(
+                                    color: Colors.red.shade800,
                                     borderRadius: const BorderRadius.only(
                                         bottomRight: Radius.circular(15),
                                         bottomLeft: Radius.circular(15))),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children:  [
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
                                     const Text(
                                       "Amount",
                                       style: TextStyle(
@@ -680,7 +796,10 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
                                           fontWeight: FontWeight.bold),
                                     ),
                                     Text(
-                                      items.elementAt(index).po_value.toString() ,
+                                      items
+                                          .elementAt(index)
+                                          .po_value
+                                          .toString(),
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
@@ -700,4 +819,3 @@ class _PurchaseOrderState extends State<PurchaseOrder> {
         ));
   }
 }
-

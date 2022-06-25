@@ -267,6 +267,7 @@ class _ViewTabUIState extends State<ViewTabUI> {
       appBar: AppBar(
         title: Image.asset(
           "assets/terms_white_logo.png",
+          alignment: Alignment.center,
           scale: 8,
         ),
       ),

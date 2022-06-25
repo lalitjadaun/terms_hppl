@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
-import 'package:terms_hppl/Api/url_endpoint.dart';
+import 'package:terms_hppl/Api/url_endpoints.dart';
 
 class HttpService{
   late Dio _dio;
 
   //final baseUrl ="http://103.205.66.226:8082/TERMSHPPL/";
-  final baseUrl ="http://45.64.8.42:8080/TERMSHPPL/";
+  final baseUrl ="http://45.64.8.42:8080/TermsPgSql/";
 
   HttpService() {
     _dio = Dio(

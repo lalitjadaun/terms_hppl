@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import '../stockgraph_model/stockgraph_model.dart';
+
 part 'stockgraph_dto.g.dart';
 
 @JsonSerializable()

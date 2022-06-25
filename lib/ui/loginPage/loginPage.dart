@@ -55,6 +55,7 @@ class _LoginPageState extends State<LoginPage> {
 
   TextEditingController userCode = TextEditingController();
   TextEditingController password = TextEditingController();
+  TextEditingController unitController = TextEditingController();
 
   //Company Name
   Future getCompanyName() async {
@@ -203,6 +204,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final index = unitListDto?.getUniList.length;
+
     return Scaffold(
         backgroundColor: Colors.white,
         //Bottom Navigation Bar
@@ -229,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _buildTerms() {
-    return TermsAnimation();
+    return const TermsAnimation();
   }
 
   _buildMawaiLogo(String url) {
@@ -237,10 +240,10 @@ class _LoginPageState extends State<LoginPage> {
       companyName?.image_compnay ?? "",
       errorBuilder: (BuildContext context, object, StackTrace) {
         return Image.asset(
-          'assets/hppl.png',
+          'assets/mawailogo.png',
           filterQuality: FilterQuality.high,
           colorBlendMode: BlendMode.difference,
-          scale: 4,
+          scale: 5,
         );
       },
       filterQuality: FilterQuality.high,
@@ -308,6 +311,86 @@ class _LoginPageState extends State<LoginPage> {
             ),
           )),
         ),
+
+        // OpacityAnimatedWidget.tween(
+        //   opacityDisabled: 0,
+        //   opacityEnabled: 1,
+        //   duration: const Duration(milliseconds: 1500),
+        //   child: SizedBox(
+        //       child: Container(
+        //     padding: const EdgeInsets.only(left: 40, right: 40, bottom: 10),
+        //     child: Material(
+        //       elevation: 10,
+        //       borderRadius: BorderRadius.circular(50.0),
+        //       child: GestureDetector(
+        //         onTap: () {
+        //           if (userCode.text.isNotEmpty) {
+        //             getUserDetails(userCode.text.trim());
+        //             _showUnitDialogue();
+        //             selectedValue;
+        //           } else {
+        //             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        //                 content: Text("Please Enter User Name")));
+        //           }
+        //         },
+        //         child: TextFormField(
+        //           onTap: () {
+        //             if (userCode.text.isNotEmpty) {
+        //               getUserDetails(userCode.text.trim());
+        //               _showUnitDialogue();
+        //               selectedValue;
+        //               print(selectedValue);
+        //             } else {
+        //               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        //                   content: Text("Please Enter User Name")));
+        //             }
+        //           },
+        //           style: const TextStyle(
+        //               color: Colors.black,
+        //               fontSize: 15,
+        //               fontWeight: FontWeight.w500),
+        //           autofocus: false,
+        //           readOnly: true,
+        //           cursorColor: Colors.redAccent.shade700,
+        //           decoration: InputDecoration(
+        //               fillColor: Colors.white,
+        //               hintText: unitListDto?.getUniList[0].unitcode,
+        //               contentPadding: const EdgeInsets.all(10),
+        //               filled: true,
+        //               suffixIcon: const Icon(
+        //                 Icons.lock,
+        //                 color: Colors.black,
+        //               ),
+        //               focusedBorder: OutlineInputBorder(
+        //                 borderSide: BorderSide(color: Colors.grey.shade400),
+        //                 borderRadius: BorderRadius.circular(50.0),
+        //               ),
+        //               enabledBorder: OutlineInputBorder(
+        //                   borderSide: BorderSide(color: Colors.grey.shade400),
+        //                   borderRadius: BorderRadius.circular(50.0)),
+        //               // labelText: "Admin",
+        //               labelStyle:
+        //                   const TextStyle(color: Colors.black, fontSize: 20.0)),
+        //           onChanged: (value) {
+        //             setState(() {
+        //               selectedValue = value;
+        //               int? position =
+        //                   unitListDto?.getUniList.indexOf(selectedValue);
+        //               unit_cd = unitListDto?.getUniList
+        //                       .elementAt(position!)
+        //                       .unitcode ??
+        //                   "";
+        //               Name =
+        //                   unitListDto?.getUniList.elementAt(position!).name ??
+        //                       "";
+        //               // print(pincodeModelDto?.pincode_list);
+        //             });
+        //           },
+        //         ),
+        //       ),
+        //     ),
+        //   )),
+        // ),
 
         //Unit list DropDown
         OpacityAnimatedWidget.tween(
@@ -382,7 +465,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
 
-        //code text field
         OpacityAnimatedWidget.tween(
           opacityDisabled: 0,
           opacityEnabled: 1,
@@ -467,5 +549,45 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ],
     );
+  }
+
+  Future<bool> _showUnitDialogue() async {
+    final index = unitListDto?.getUniList.length;
+    return await showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: ListView.builder(
+                      itemCount: index,
+                      shrinkWrap: true,
+                      itemBuilder: (BuildContext context, int index) {
+                        return InkWell(
+                          onTap: () {
+                            Navigator.pop(context, true);
+
+                          },
+                          child: Card(
+                            elevation: 10,
+                            child: Text(
+                              unitListDto?.getUniList
+                                      .elementAt(index)
+                                      .unitcode ??
+                                  "",
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                ),
+              );
+            }) ??
+        false;
   }
 }
